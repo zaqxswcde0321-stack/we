@@ -17,7 +17,6 @@
   </style>
 </head>
 
-<!-- 【修改處 1】：將 max-w-md (約 448px) 擴展為 max-w-5xl (約 1024px)，完美符合電腦大螢幕寬度 -->
 <body class="max-w-5xl mx-auto shadow-xl bg-[#fcfbf9] min-h-screen pb-16 px-6 md:px-12 relative">
 
   <!-- 背景音樂播放器（讀取音樂檔 music.mp3） -->
@@ -26,7 +25,7 @@
   </audio>
 
   <!-- 右上角音樂懸浮按鈕 -->
-  <button id="musicBtn" onclick="toggleMusic()" class="fixed top-6 right-6 z-50 bg-white/90 backdrop-blur-sm px-4 py-2.5 rounded-full shadow-lg border border-amber-200 text-amber-900 text-sm font-semibold focus:outline-none flex items-center space-x-1 hover:bg-amber-50 transition">
+  <button id="musicBtn" onclick="toggleMusic(event)" class="fixed top-6 right-6 z-50 bg-white/90 backdrop-blur-sm px-4 py-2.5 rounded-full shadow-lg border border-amber-200 text-amber-900 text-sm font-semibold focus:outline-none flex items-center space-x-1 hover:bg-amber-50 transition">
     <span id="musicIcon">🎵</span>
     <span id="musicText">播放音樂</span>
   </button>
@@ -37,22 +36,58 @@
     const musicText = document.getElementById('musicText');
     let isPlaying = false;
 
-    function toggleMusic() {
-      if (isPlaying) {
-        bgm.pause();
-        musicIcon.innerText = '🎵';
-        musicText.innerText = '播放音樂';
-        isPlaying = false;
-      } else {
+    // 播放音樂的邏輯函式
+    function startMusic() {
+      if (!isPlaying) {
         bgm.play().then(() => {
           musicIcon.innerText = '🎶';
           musicText.innerText = '音樂播放中';
           isPlaying = true;
         }).catch(err => {
-          alert('音樂載入失敗，請確認 music.mp3 檔案是否存在！');
+          console.log('播放受限，等待使用者互動：', err);
         });
       }
     }
+
+    // 暫停音樂的邏輯函式
+    function pauseMusic() {
+      if (isPlaying) {
+        bgm.pause();
+        musicIcon.innerText = '🎵';
+        musicText.innerText = '播放音樂';
+        isPlaying = false;
+      }
+    }
+
+    // 點擊右上角按鈕的切換邏輯
+    function toggleMusic(event) {
+      if (event) event.stopPropagation(); // 阻止事件冒泡
+      if (isPlaying) {
+        pauseMusic();
+      } else {
+        startMusic();
+      }
+    }
+
+    // 監聽頁面載入與使用者的第一個點擊/觸控行為（實現滑動或點擊頁面即自動播放）
+    function autoPlayOnFirstInteraction() {
+      // 嘗試直接播放（部分瀏覽器在特定條件下可能允許）
+      startMusic();
+
+      // 若瀏覽器封鎖，使用者在畫面上進行第一次點擊或觸控時自動啟動音樂
+      const handleFirstInteraction = () => {
+        startMusic();
+        // 觸發一次後移除事件監聽
+        document.removeEventListener('click', handleFirstInteraction);
+        document.removeEventListener('touchstart', handleFirstInteraction);
+      };
+
+      document.addEventListener('click', handleFirstInteraction);
+      document.addEventListener('touchstart', handleFirstInteraction);
+    }
+
+    // 網頁載入完成後啟動自動播放檢測
+    window.addEventListener('DOMContentLoaded', autoPlayOnFirstInteraction);
   </script>
 
   <!-- 1. 頂部主視覺 Section -->
@@ -60,7 +95,7 @@
     <p class="tracking-widest text-base text-gray-500 uppercase">Wedding Invitation</p>
     <h1 class="text-4xl md:text-5xl my-4 text-[#8b5a2b] font-semibold">2026 . 05 . 24</h1>
     
-    <!-- 主婚紗照 hero.jpg（限制電腦版最大高度，防止大螢幕下圖片佔滿全螢幕） -->
+    <!-- 主婚紗照 hero.jpg -->
     <div class="my-6 overflow-hidden rounded-xl shadow-lg max-w-3xl mx-auto">
       <img src="hero.jpg" alt="主婚紗照" class="w-full max-h-[70vh] object-cover">
     </div>
@@ -72,7 +107,6 @@
     <h2 class="text-2xl md:text-3xl text-[#8b5a2b] font-semibold tracking-wider">OUR LOVE STORY</h2>
     <p class="text-sm text-gray-400 mb-8">Fall in love</p>
     
-    <!-- 【修改處 2】：在電腦版改為並排（2 欄）顯示照片與內容，提升大螢幕觀賞體驗 -->
     <div class="max-w-4xl mx-auto my-6 space-y-6">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <img src="story1.jpg" alt="故事照片 1" class="rounded-xl w-full h-80 object-cover shadow-sm">
