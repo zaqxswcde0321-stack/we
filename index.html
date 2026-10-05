@@ -6,23 +6,58 @@
   <title>OUR WEDDING INVITATION</title>
   <!-- 引入 Tailwind CSS 進行快速樣式排版 -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- 引入韓系/手寫字體 -->
-  <link href="https://fonts.googleapis.com/css2?family=Klee+One&family=Noto+Serif+TC:wght@400;600&display=swap" rel="stylesheet">
+  <!-- 引入全頁面可愛手寫風「芫荽體 (Iansui)」與浪漫英文草寫 (Great Vibes) -->
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Iansui&display=swap" rel="stylesheet">
   <style>
-    body {
-      font-family: 'Klee One', 'Noto Serif TC', serif;
+    /* 全網頁預設字體統一為「芫荽體 (Iansui)」 */
+    body, input, button, textarea, select {
+      font-family: 'Iansui', cursive, sans-serif !important;
       background-color: #fcfbf9;
       color: #4a4a4a;
     }
+
+    .font-iansui { font-family: 'Iansui', cursive, sans-serif; }
+    .font-cursive { font-family: 'Great Vibes', cursive; }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .vinyl-spin { animation: spin 12s linear infinite; }
+
+    @keyframes heartBlink {
+      0%, 100% { opacity: 0.3; transform: scale(0.92); }
+      50% { opacity: 1; transform: scale(1.08); }
+    }
+    .heart-pulse { animation: heartBlink 1.8s ease-in-out infinite; }
+
+    @keyframes starSparkle {
+      0%, 100% { opacity: 0.4; transform: scale(0.9) rotate(0deg); }
+      50% { opacity: 1; transform: scale(1.25) rotate(12deg); }
+    }
+    .star-sparkle { display: inline-block; animation: starSparkle 1.5s infinite ease-in-out; }
+
+    @keyframes dateZoom {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.12); }
+    }
+    .date-zoom { display: inline-block; animation: dateZoom 2s ease-in-out infinite; }
+
+    @keyframes heartJump {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-4px) scale(1.18); }
+    }
+    .heart-jump { animation: heartJump 1.2s ease-in-out infinite; }
+
+    @keyframes seeYouBounce {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.15); }
+    }
+    .see-you-bounce { display: inline-block; animation: seeYouBounce 1.8s ease-in-out infinite; }
   </style>
 </head>
 
 <body class="max-w-5xl mx-auto shadow-xl bg-[#fcfbf9] min-h-screen pb-16 px-6 md:px-12 relative">
-
-  <!-- 背景音樂播放器（讀取音樂檔 music.mp3） -->
-  <audio id="weddingBgm" loop preload="auto">
-    <source src="music.mp3" type="audio/mpeg">
-  </audio>
 
   <!-- 右上角音樂懸浮按鈕 -->
   <button id="musicBtn" onclick="toggleMusic(event)" class="fixed top-6 right-6 z-50 bg-white/90 backdrop-blur-sm px-4 py-2.5 rounded-full shadow-lg border border-amber-200 text-amber-900 text-sm font-semibold focus:outline-none flex items-center space-x-1 hover:bg-amber-50 transition">
@@ -31,162 +66,650 @@
   </button>
 
   <script>
-    const bgm = document.getElementById('weddingBgm');
+    const bgm = new Audio('music.mp3');
+    bgm.loop = true;
+
     const musicIcon = document.getElementById('musicIcon');
     const musicText = document.getElementById('musicText');
     let isPlaying = false;
 
-    // 播放音樂的邏輯函式
-    function startMusic() {
-      if (!isPlaying) {
-        bgm.play().then(() => {
-          musicIcon.innerText = '🎶';
-          musicText.innerText = '音樂播放中';
-          isPlaying = true;
-        }).catch(err => {
-          console.log('播放受限，等待使用者互動：', err);
-        });
-      }
+    function playAudio() {
+      bgm.play().then(() => {
+        musicIcon.innerText = '🎶';
+        musicText.innerText = '音樂播放中';
+        isPlaying = true;
+      }).catch(err => {
+        console.log('音樂播放失敗/被瀏覽器阻擋：', err);
+      });
     }
 
-    // 暫停音樂的邏輯函式
-    function pauseMusic() {
-      if (isPlaying) {
-        bgm.pause();
-        musicIcon.innerText = '🎵';
-        musicText.innerText = '播放音樂';
-        isPlaying = false;
-      }
+    function pauseAudio() {
+      bgm.pause();
+      musicIcon.innerText = '🎵';
+      musicText.innerText = '播放音樂';
+      isPlaying = false;
     }
 
-    // 點擊右上角按鈕的切換邏輯
     function toggleMusic(event) {
-      if (event) event.stopPropagation(); // 阻止事件冒泡
-      if (isPlaying) {
-        pauseMusic();
-      } else {
-        startMusic();
-      }
+      if (event) event.stopPropagation();
+      if (isPlaying) { pauseAudio(); } else { playAudio(); }
     }
 
-    // 監聽頁面載入與使用者的第一個點擊/觸控行為（實現滑動或點擊頁面即自動播放）
-    function autoPlayOnFirstInteraction() {
-      // 嘗試直接播放（部分瀏覽器在特定條件下可能允許）
-      startMusic();
-
-      // 若瀏覽器封鎖，使用者在畫面上進行第一次點擊或觸控時自動啟動音樂
-      const handleFirstInteraction = () => {
-        startMusic();
-        // 觸發一次後移除事件監聽
-        document.removeEventListener('click', handleFirstInteraction);
-        document.removeEventListener('touchstart', handleFirstInteraction);
+    function initAutoPlay() {
+      const handleUserInteraction = () => {
+        if (!isPlaying) { playAudio(); }
+        document.removeEventListener('click', handleUserInteraction);
+        document.removeEventListener('touchstart', handleUserInteraction);
+        document.removeEventListener('scroll', handleUserInteraction);
       };
 
-      document.addEventListener('click', handleFirstInteraction);
-      document.addEventListener('touchstart', handleFirstInteraction);
+      document.addEventListener('click', handleUserInteraction);
+      document.addEventListener('touchstart', handleUserInteraction);
+      document.addEventListener('scroll', handleUserInteraction);
     }
 
-    // 網頁載入完成後啟動自動播放檢測
-    window.addEventListener('DOMContentLoaded', autoPlayOnFirstInteraction);
+    window.addEventListener('DOMContentLoaded', initAutoPlay);
   </script>
 
-  <!-- 1. 頂部主視覺 Section -->
+  <!-- 1. 第一頁：頂部主視覺 Section -->
   <section class="text-center pt-12 pb-10 border-b border-gray-200">
-    <p class="tracking-widest text-base text-gray-500 uppercase">Wedding Invitation</p>
-    <h1 class="text-4xl md:text-5xl my-4 text-[#8b5a2b] font-semibold">2026 . 05 . 24</h1>
-    
-    <!-- 主婚紗照 hero.jpg -->
-    <div class="my-6 overflow-hidden rounded-xl shadow-lg max-w-3xl mx-auto">
-      <img src="hero.jpg" alt="主婚紗照" class="w-full max-h-[70vh] object-cover">
-    </div>
-    <p class="text-lg md:text-xl text-gray-700 font-medium tracking-wide">將故事寫成了我們最重要的決定</p>
-  </section>
-
-  <!-- 2. 愛情故事 Section -->
-  <section class="py-12 text-center border-b border-gray-200">
-    <h2 class="text-2xl md:text-3xl text-[#8b5a2b] font-semibold tracking-wider">OUR LOVE STORY</h2>
-    <p class="text-sm text-gray-400 mb-8">Fall in love</p>
-    
-    <div class="max-w-4xl mx-auto my-6 space-y-6">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <img src="story1.jpg" alt="故事照片 1" class="rounded-xl w-full h-80 object-cover shadow-sm">
-        <img src="story2.jpg" alt="故事照片 2" class="rounded-xl w-full h-80 object-cover shadow-sm">
+    <div class="flex justify-center my-6 relative max-w-xs md:max-w-md mx-auto">
+      <div class="absolute -top-3 -left-2 md:-top-5 md:left-2 z-30 pointer-events-none text-pink-400 font-iansui text-2xl md:text-3xl font-bold -rotate-12 flex items-center space-x-0.5 drop-shadow-sm">
+        <span class="inline-block transform -translate-y-1">就</span>
+        <span class="inline-block transform translate-y-1">是</span>
+        <span class="inline-block transform -translate-y-1">愛</span>
+        <span class="relative inline-block transform translate-y-0.5">
+          你
+          <span class="absolute -top-4 left-1 text-sm md:text-base animate-pulse">🌸</span>
+        </span>
       </div>
 
-      <p class="text-base md:text-lg leading-relaxed px-4 text-gray-600 max-w-2xl mx-auto py-4">
-        親愛的朋友～<br>
-        這十年的時光，我們一起成長。<br>
-        你佔據了我的青春，我霸佔了你的年華。<br>
-        許久未見，甚是想念，我們婚禮見！
+      <div class="relative w-64 h-64 md:w-80 md:h-80 rounded-full bg-neutral-900 border-4 border-amber-200/80 shadow-2xl flex items-center justify-center overflow-hidden vinyl-spin">
+        <div class="absolute inset-3 rounded-full border border-neutral-700/60 pointer-events-none"></div>
+        <div class="absolute inset-7 rounded-full border border-neutral-800/80 pointer-events-none"></div>
+        <div class="absolute inset-12 rounded-full border border-neutral-700/50 pointer-events-none"></div>
+        <div class="absolute inset-16 rounded-full border border-neutral-800/70 pointer-events-none"></div>
+        
+        <img src="hero.jpg" alt="黑膠婚紗照" class="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover border-4 border-amber-100 z-10 shadow-inner">
+        <div class="w-3 h-3 bg-neutral-900 border border-amber-200 rounded-full z-20 absolute shadow-md"></div>
+      </div>
+
+      <div class="absolute bottom-2 z-30 font-cursive text-amber-200/90 text-xl md:text-2xl tracking-wide drop-shadow pointer-events-none">
+        y4wu3Love
+      </div>
+    </div>
+
+    <h1 class="font-iansui text-4xl md:text-5xl mt-8 mb-2 text-[#8b5a2b] tracking-widest font-bold">
+      婚禮邀請函
+    </h1>
+    <p class="font-cursive text-3xl md:text-4xl text-[#8b5a2b]/90 mb-3 tracking-wide">
+      Welcome to our wedding
+    </p>
+
+    <div class="flex items-center justify-center space-x-2 my-4 heart-pulse">
+      <svg class="w-5 h-5 text-red-500 fill-none stroke-current stroke-[2.2]" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+      <svg class="w-5 h-5 text-red-500 fill-none stroke-current stroke-[2.2]" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+      <svg class="w-5 h-5 text-red-500 fill-none stroke-current stroke-[2.2]" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+      <svg class="w-5 h-5 text-red-500 fill-none stroke-current stroke-[2.2]" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+      <svg class="w-5 h-5 text-red-500 fill-none stroke-current stroke-[2.2]" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+      <svg class="w-5 h-5 text-red-500 fill-none stroke-current stroke-[2.2]" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+    </div>
+
+    <div class="font-iansui text-xl md:text-2xl text-gray-700 leading-relaxed space-y-2 my-6">
+      <p>當你/妳看到這篇文章時</p>
+      <p>你/妳已經被我們鄭重地加入our invitation list了</p>
+      <p>我們正在倒數日子&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;期待與你/妳們相見</p>
+      <p>一起見證我們最重要、最幸福的一天</p>
+    </div>
+
+    <p class="font-iansui text-lg md:text-xl text-[#8b5a2b] font-medium tracking-wide mt-6 mb-8">
+      將故事寫成了我們最重要的決定
+    </p>
+
+    <div class="mt-8 -mx-6 md:-mx-12 overflow-hidden shadow-md">
+      <img src="banner1.jpg" alt="第一頁滿版婚紗照" class="w-full max-h-[55vh] object-cover">
+    </div>
+  </section>
+
+  <!-- 2. 第二頁：愛情故事 Section -->
+  <section class="py-12 text-center border-b border-gray-200">
+    <h2 class="font-cursive text-6xl md:text-7xl text-[#8b5a2b]/90 my-4 tracking-wide leading-tight">
+      Our Love Story
+    </h2>
+    <p class="font-iansui text-lg md:text-xl text-gray-400 mt-1 mb-8">日子慢慢過，愛意漸漸濃</p>
+    
+    <div class="max-w-3xl mx-auto my-6 px-4">
+      <div class="flex items-center justify-center space-x-4 md:space-x-12 my-6">
+        <div class="flex flex-col items-center">
+          <div class="w-32 h-32 md:w-48 md:h-48 rounded-full overflow-hidden border-4 border-amber-200 shadow-lg mb-3">
+            <img src="groom.jpg" alt="新郎 楊舜帆" class="w-full h-full object-cover">
+          </div>
+          <span class="font-iansui text-sm md:text-base text-gray-500">新郎</span>
+          <span class="font-iansui text-xl md:text-2xl font-bold text-[#8b5a2b] mt-0.5">楊舜帆</span>
+        </div>
+
+        <div class="text-red-500 text-3xl md:text-5xl animate-pulse self-center pb-8">
+          ♥
+        </div>
+
+        <div class="flex flex-col items-center">
+          <div class="w-32 h-32 md:w-48 md:h-48 rounded-full overflow-hidden border-4 border-amber-200 shadow-lg mb-3">
+            <img src="bride.jpg" alt="新娘 張佳瑜" class="w-full h-full object-cover">
+          </div>
+          <span class="font-iansui text-sm md:text-base text-gray-500">新娘</span>
+          <span class="font-iansui text-xl md:text-2xl font-bold text-[#8b5a2b] mt-0.5">張佳瑜</span>
+        </div>
+      </div>
+
+      <div class="pt-8 space-y-2">
+        <p class="font-iansui text-xl md:text-2xl text-gray-700 font-medium">
+          來一趟關於愛的旅程
+        </p>
+        <p class="font-iansui text-xl md:text-2xl text-[#8b5a2b] font-bold">
+          見證我們 愛的啟程
+        </p>
+      </div>
+
+      <div class="font-iansui leading-relaxed text-gray-600 max-w-2xl mx-auto pt-8 space-y-2">
+        <p class="text-base md:text-lg">以前總覺得婚禮只是形式上的宣告</p>
+        <p class="text-base md:text-lg">直到現在才明白&nbsp;&nbsp;是一場人生為數不多的相聚</p>
+        <p class="text-base md:text-lg">是跨越距離的奔赴</p>
+        <p class="text-base md:text-lg">是不計得失的支持</p>
+        <p class="text-base md:text-lg">感謝一路相伴的家人朋友</p>
+        <p class="text-base md:text-lg">許久未見&nbsp;&nbsp;&nbsp;&nbsp;甚是想念</p>
+
+        <div class="pt-6 pb-2">
+          <p class="date-zoom text-2xl md:text-3xl text-[#8b5a2b] font-bold tracking-widest">
+            2027 . 01 . 23
+          </p>
+        </div>
+
+        <p class="text-sm md:text-base text-gray-400 tracking-wider">
+          ♡ 期待能再次與你們相聚 ♡
+        </p>
+      </div>
+
+      <div class="mt-8 pt-6 max-w-md mx-auto">
+        <h3 class="font-sans font-bold text-2xl text-black tracking-wide mb-3">It's You</h3>
+
+        <div class="w-full bg-transparent px-2 py-3 select-none">
+          <div class="flex justify-end space-x-3 text-black mb-1">
+            <svg class="w-5 h-5 cursor-pointer" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+          </div>
+          
+          <div class="flex justify-end space-x-3 text-black mb-2">
+            <svg class="w-6 h-6 cursor-pointer" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+          </div>
+
+          <div class="relative mb-2">
+            <div class="absolute -top-6 left-1">
+              <svg class="w-5 h-5 text-black fill-none stroke-current stroke-2" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+            </div>
+            <div class="w-full bg-black h-1 rounded-full relative flex items-center">
+              <div class="w-1/6 bg-black h-1 rounded-full"></div>
+              <div class="w-3.5 h-3.5 bg-black border-2 border-white rounded-full absolute left-[12%] shadow"></div>
+            </div>
+          </div>
+
+          <div class="flex justify-between text-xs text-black font-sans font-semibold mb-3 px-0.5">
+            <span>00:10</span>
+            <span>01:30</span>
+          </div>
+
+          <div class="flex items-center justify-between px-2">
+            <svg class="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+            <svg class="w-7 h-7 text-black fill-current cursor-pointer" viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+            <svg id="playerControlBtn" onclick="toggleMusic(event)" class="w-8 h-8 text-black fill-current cursor-pointer hover:scale-110 transition" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+            <svg class="w-7 h-7 text-black fill-current cursor-pointer" viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+            <div class="flex items-center text-xs font-bold text-black">
+              <span>A</span>
+              <svg class="w-3 h-3 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <p class="font-iansui text-sm text-gray-400 mt-2 tracking-widest">
+          ...音樂正在播放中...
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. 第三頁：宴客資訊與直向照片 Section -->
+  <section class="py-12 border-b border-gray-200">
+    <div class="mb-10 -mx-6 md:-mx-12 overflow-hidden shadow-md text-center">
+      <img src="banner.jpg" alt="橫向滿版婚紗照" class="w-full max-h-[60vh] object-cover">
+    </div>
+
+    <div class="font-iansui max-w-2xl mx-auto px-4 space-y-2 text-gray-700 text-lg md:text-xl leading-relaxed mb-12 text-center">
+      <p>我們曾各自奔赴人海，直到目光交會的那一刻</p>
+      <p>才懂歸屬的意義</p>
+      <p class="pt-2">誠摯邀請生命中重要的你</p>
+      <p>來見證這場「雙向奔赴」的圓滿</p>
+      <p class="pt-2">
+        願有你們的見證往後每一個平凡的日子都閃著光
+        <span class="star-sparkle text-amber-400 text-2xl ml-1">✨</span>
       </p>
     </div>
-  </section>
 
-  <!-- 3. 宴客資訊 Section -->
-  <section class="py-12 text-center border-b border-gray-200">
-    <h2 class="text-2xl md:text-3xl text-[#8b5a2b] mb-2 font-semibold">ABOUT WEDDING</h2>
-    <p class="text-base text-gray-500 mb-8">關於我們的婚禮</p>
-    
-    <div class="bg-white p-8 md:p-10 rounded-2xl shadow-sm text-left max-w-2xl mx-auto space-y-6 border border-gray-100">
-      <h3 class="font-bold text-2xl text-center text-gray-800">大中華國際美食館</h3>
-      <p class="text-sm text-center text-gray-500">彰化縣和美鎮彰美路四段306號</p>
-      
-      <div class="border-t pt-6 space-y-4 text-base">
-        <div class="flex items-center space-x-4">
-          <span class="bg-[#8b5a2b] text-white px-3 py-1 rounded text-sm font-medium">11:30</span>
-          <span>賓客報到 (Reception)</span>
+    <div class="max-w-2xl mx-auto px-4 my-10">
+      <div class="grid grid-cols-2 gap-4 md:gap-8 items-stretch">
+        <div class="flex flex-col items-center">
+          <div class="w-full h-64 md:h-80 rounded-2xl overflow-hidden shadow-md border-2 border-amber-100/60 mb-3">
+            <img src="groom_story.jpg" alt="直向婚紗照 左" class="w-full h-full object-cover">
+          </div>
+          <div class="w-full h-12 flex items-center justify-center">
+            <span class="font-sans font-bold text-gray-400 text-3xl md:text-4xl text-center tracking-wider">01/23</span>
+          </div>
         </div>
-        <div class="flex items-center space-x-4">
-          <span class="bg-[#8b5a2b] text-white px-2.5 py-1 rounded text-sm font-medium">11:45</span>
-          <span>入席 (Ceremony)</span>
+
+        <div class="flex flex-col items-center pt-8 md:pt-12">
+          <div class="w-full h-12 mb-2 flex items-center justify-center">
+            <span class="font-iansui font-bold text-red-500 text-3xl md:text-4xl text-center tracking-wide">( 喜+喜 )</span>
+          </div>
+          <div class="w-full h-64 md:h-80 rounded-2xl overflow-hidden shadow-md border-2 border-amber-100/60">
+            <img src="bride_story.jpg" alt="直向婚紗照 右" class="w-full h-full object-cover">
+          </div>
         </div>
-        <div class="flex items-center space-x-4">
-          <span class="bg-[#8b5a2b] text-white px-3 py-1 rounded text-sm font-medium">12:00</span>
-          <span>宴席開始</span>
-        </div>
+      </div>
+
+      <div class="font-iansui text-left text-gray-700 text-base md:text-lg leading-relaxed pt-10 space-y-2">
+        <p>謝謝你，出現在我的生命</p>
+        <p>成為我的光&nbsp;&nbsp;我的餘生所向</p>
+        <p class="pt-2 flex items-center flex-wrap">
+          <span>我愛你</span>
+          <span class="text-red-500 mx-1">❤️</span>
+          <span>不只今天 而是往後的每個朝暮</span>
+        </p>
+
+        <p class="text-gray-300 font-sans tracking-widest pt-4 pb-2 text-sm">
+          //////
+        </p>
+
+        <p class="font-cursive text-2xl md:text-3xl text-[#8b5a2b] text-right tracking-wide pt-1">
+          Love never fails
+        </p>
       </div>
     </div>
   </section>
 
-  <!-- 4. RSVP 表單 Section -->
+  <!-- 4. 第四頁：客製頁首 Section -->
+  <section class="py-12 border-b border-gray-200">
+    <div class="max-w-md mx-auto text-center mb-8 px-4">
+      <div class="flex items-center justify-center space-x-2 text-gray-600 font-sans font-medium text-base md:text-lg">
+        <span class="tracking-wide">Saturday</span>
+        <div class="flex-1 border-b border-gray-400 border-dashed mx-2"></div>
+        <span class="font-bold tracking-widest">2027</span>
+      </div>
+      <div class="text-center mt-2 text-gray-600 font-sans text-base md:text-lg font-semibold tracking-widest">
+        JAN &nbsp;&nbsp;&nbsp;&nbsp; 23
+      </div>
+    </div>
+
+    <div class="font-iansui text-center text-gray-700 text-lg md:text-xl leading-relaxed my-12 space-y-2">
+      <p>人生其實只要兩次幸運就好</p>
+      <p>一次是遇見你一次是走到底</p>
+    </div>
+
+    <div class="max-w-2xl mx-auto px-4 my-10">
+      <div class="grid grid-cols-2 gap-4 md:gap-6">
+        <div class="w-full h-72 md:h-96 rounded-2xl overflow-hidden shadow-md border border-amber-100">
+          <img src="story_left.jpg" alt="第四頁直向婚紗照 左" class="w-full h-full object-cover">
+        </div>
+        <div class="w-full h-72 md:h-96 rounded-2xl overflow-hidden shadow-md border border-amber-100">
+          <img src="story_right.jpg" alt="第四頁直向婚紗照 右" class="w-full h-full object-cover">
+        </div>
+      </div>
+    </div>
+
+    <div class="text-center font-iansui font-bold text-gray-400 text-lg md:text-xl tracking-wider my-8">
+      " 在你身邊 / 你在身邊 / 日日又年年 "
+    </div>
+
+    <div class="max-w-2xl mx-auto px-4 text-left my-6 text-gray-400 text-xl tracking-widest">
+      ♡ ♡ ♡
+    </div>
+
+    <div class="max-w-2xl mx-auto px-4 my-8 relative">
+      <div class="relative rounded-2xl overflow-hidden shadow-lg border border-amber-100">
+        <div class="absolute top-4 left-4 z-20 font-cursive text-red-500 text-3xl md:text-4xl drop-shadow-md leading-tight pointer-events-none bg-white/40 backdrop-blur-xs p-2 rounded-xl">
+          Happy<br>
+          Wedding <span class="text-pink-400 text-xl inline-block align-middle ml-1">🌸</span>
+        </div>
+        <img src="wedding_large.jpg" alt="大張婚紗照" class="w-full max-h-[70vh] object-cover">
+      </div>
+    </div>
+
+    <div class="max-w-2xl mx-auto px-4 my-8">
+      <div class="w-full h-0.5 bg-black/80"></div>
+    </div>
+
+    <div class="text-center font-iansui font-bold text-gray-400 text-xl md:text-2xl tracking-widest my-16">
+      "始於初見 &nbsp;&nbsp;&nbsp;&nbsp; 陷於陪伴 &nbsp;&nbsp;&nbsp;&nbsp; 終於白首"
+    </div>
+  </section>
+
+  <!-- 5. 第五頁：良辰吉時 + 宴客地點地圖 + 2027/1 月曆與倒數計時器 Section -->
+  <section class="py-12 border-b border-gray-200 text-center">
+    <div class="font-iansui text-2xl md:text-3xl text-[#8b5a2b] font-semibold space-y-2 mb-8 leading-relaxed">
+      <p>良辰已定，吉時待訪</p>
+      <p>吾有薄酒，以謝良友</p>
+    </div>
+
+    <div class="my-8 -mx-6 md:-mx-12 overflow-hidden shadow-md">
+      <img src="page5_banner.jpg" alt="第五頁橫向婚紗照" class="w-full max-h-[55vh] object-cover">
+    </div>
+
+    <div class="my-6 flex justify-center items-center">
+      <div class="w-12 h-12 rounded-full border-2 border-red-500/80 flex items-center justify-center bg-red-50 shadow-sm">
+        <span class="font-iansui font-bold text-red-500 text-2xl">囍</span>
+      </div>
+    </div>
+
+    <div class="my-8 font-iansui text-gray-800 space-y-2">
+      <p class="text-gray-400 text-base md:text-lg font-medium">- 婚禮日期 &nbsp;/&nbsp; Date -</p>
+      <p class="text-2xl md:text-3xl text-[#8b5a2b] font-bold tracking-wider">2027年01月23日</p>
+      <p class="text-lg md:text-xl text-gray-600 font-semibold pt-1">
+        農曆二〇二六年臘月十六日 &nbsp; 星期六
+      </p>
+    </div>
+
+    <div class="my-10 max-w-xl mx-auto px-4 bg-white p-8 rounded-2xl shadow-sm border border-gray-100 space-y-4">
+      <p class="text-gray-400 text-base md:text-lg font-medium">- 婚禮席設 &nbsp;/&nbsp; Address -</p>
+      <h3 class="font-iansui text-2xl md:text-3xl font-bold text-gray-800">高雄翰品酒店</h3>
+      <p class="font-iansui text-xl text-[#8b5a2b] font-semibold">雲廳 - 3F</p>
+      <p class="font-iansui text-sm md:text-base text-gray-500">高雄市鹽埕區大仁路43號</p>
+
+      <div class="pt-3">
+        <a href="https://maps.google.com/?q=高雄翰品酒店" target="_blank" class="inline-flex items-center justify-center bg-[#8b5a2b] text-white px-6 py-3 rounded-full shadow hover:bg-[#6e4620] transition duration-200 font-iansui text-base space-x-2">
+          <span>📍 查看 Google 地圖導航</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="my-12 max-w-sm mx-auto bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+      <h4 class="font-sans font-bold text-xl text-gray-800 mb-4 tracking-wider">2027 . 01</h4>
+      
+      <div class="grid grid-cols-7 text-center font-sans font-semibold text-xs text-gray-400 mb-3">
+        <span>SUN</span><span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span>
+      </div>
+
+      <div class="grid grid-cols-7 text-center font-sans text-sm md:text-base text-gray-700 gap-y-2 items-center">
+        <span></span><span></span><span></span><span></span>
+        <span>1</span><span>2</span><span>3</span>
+        <span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span>
+        <span>11</span><span>12</span><span>13</span><span>14</span><span>15</span><span>16</span><span>17</span>
+        <span>18</span><span>19</span><span>20</span><span>21</span><span>22</span>
+        
+        <div class="relative flex items-center justify-center w-8 h-8 mx-auto">
+          <span class="font-bold text-red-500 z-10">23</span>
+          <div class="absolute inset-0 flex items-center justify-center heart-jump pointer-events-none">
+            <svg class="w-9 h-9 text-red-500 stroke-current stroke-[1.8] fill-none" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+            </svg>
+          </div>
+        </div>
+
+        <span>24</span><span>25</span><span>26</span><span>27</span><span>28</span><span>29</span><span>30</span>
+        <span>31</span>
+      </div>
+    </div>
+
+    <div class="my-12 max-w-md mx-auto bg-amber-50/60 p-6 rounded-2xl border border-amber-200/60 shadow-sm">
+      <p class="font-iansui text-base md:text-lg text-gray-500 mb-4 font-semibold">
+        距離幸福婚禮倒數
+      </p>
+
+      <div class="grid grid-cols-4 gap-2 text-center font-sans">
+        <div class="bg-white p-3 rounded-xl shadow-xs">
+          <span id="countdownDays" class="block text-2xl md:text-3xl font-bold text-[#8b5a2b]">00</span>
+          <span class="text-xs text-gray-400 font-iansui">天</span>
+        </div>
+        <div class="bg-white p-3 rounded-xl shadow-xs">
+          <span id="countdownHours" class="block text-2xl md:text-3xl font-bold text-[#8b5a2b]">00</span>
+          <span class="text-xs text-gray-400 font-iansui">時</span>
+        </div>
+        <div class="bg-white p-3 rounded-xl shadow-xs">
+          <span id="countdownMinutes" class="block text-2xl md:text-3xl font-bold text-[#8b5a2b]">00</span>
+          <span class="text-xs text-gray-400 font-iansui">分</span>
+        </div>
+        <div class="bg-white p-3 rounded-xl shadow-xs">
+          <span id="countdownSeconds" class="block text-2xl md:text-3xl font-bold text-[#8b5a2b]">00</span>
+          <span class="text-xs text-gray-400 font-iansui">秒</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="max-w-md mx-auto my-10 px-4">
+      <div class="rounded-2xl overflow-hidden shadow-md border border-amber-100">
+        <img src="vertical1.jpg" alt="新人照片 1" class="w-full max-h-[70vh] object-cover">
+      </div>
+    </div>
+
+    <div class="my-12 font-iansui text-xl md:text-2xl text-gray-700 leading-relaxed space-y-2">
+      <p>如今我們決定開啟人生新的篇章</p>
+      <p>偕同我們的父母誠邀您的到來</p>
+    </div>
+
+    <div class="max-w-md mx-auto my-10 px-4">
+      <div class="rounded-2xl overflow-hidden shadow-md border border-amber-100">
+        <img src="photo2.jpg" alt="新人照片 2" class="w-full max-h-[70vh] object-cover">
+      </div>
+    </div>
+
+    <div class="max-w-lg mx-auto my-12 p-8 bg-white/80 rounded-2xl shadow-sm border border-amber-200/80 text-left font-iansui">
+      <h3 class="text-2xl font-bold text-[#8b5a2b] text-center mb-6 tracking-widest">
+        新 / 人 / 碎 / 碎 / 念
+      </h3>
+      <div class="space-y-4 text-base md:text-lg text-gray-700 leading-relaxed">
+        <p class="flex items-start">
+          <span class="font-bold text-[#8b5a2b] mr-2">1.</span>
+          <span>請預留好這一天的行程，如計畫有變請提前告知新人。</span>
+        </p>
+        <p class="flex items-start">
+          <span class="font-bold text-[#8b5a2b] mr-2">2.</span>
+          <span>迎賓區設有拍貼機，請大家踴躍使用，拍好拍滿，幫我們拍回本!</span>
+        </p>
+        <p class="flex items-start">
+          <span class="font-bold text-[#8b5a2b] mr-2">3.</span>
+          <span>婚禮忙碌，如招待不周請多包涵，希望大家玩得開心!</span>
+        </p>
+      </div>
+    </div>
+
+    <div class="max-w-md mx-auto my-10 px-4">
+      <div class="rounded-2xl overflow-hidden shadow-md border border-amber-100">
+        <img src="photo3.jpg" alt="新人照片 3" class="w-full max-h-[70vh] object-cover">
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. 出席意願調查 Section -->
   <section class="py-12 max-w-2xl mx-auto">
-    <h2 class="text-2xl md:text-3xl text-center text-[#8b5a2b] mb-8 font-semibold">婚禮禮邀邀請函 (RSVP)</h2>
+    <h3 class="font-iansui text-2xl md:text-3xl text-center text-[#8b5a2b] mb-8 font-bold">出席意願調查</h3>
     
-    <form class="space-y-6 text-base">
+    <form id="weddingForm" class="space-y-6 text-lg">
       <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-        <label class="block font-semibold mb-3 text-lg">請問是否能參加婚禮？</label>
+        <label class="font-iansui block font-bold mb-3 text-xl">請問是否能參加婚禮？</label>
         <div class="space-y-3">
           <label class="flex items-center space-x-3 cursor-pointer">
-            <input type="radio" name="attend" value="yes" class="accent-[#8b5a2b] w-4 h-4">
-            <span>參加！我們婚禮見</span>
+            <input type="radio" name="attend" value="參加！我們婚禮見" class="accent-[#8b5a2b] w-4 h-4" checked onclick="toggleAttendanceFields(true)">
+            <span class="font-iansui">參加！我們婚禮見</span>
           </label>
           <label class="flex items-center space-x-3 cursor-pointer">
-            <input type="radio" name="attend" value="no" class="accent-[#8b5a2b] w-4 h-4">
-            <span>當天有事無法前往，我想留下祝福</span>
+            <input type="radio" name="attend" value="當天有事無法前往，我想留下祝福" class="accent-[#8b5a2b] w-4 h-4" onclick="toggleAttendanceFields(false)">
+            <span class="font-iansui">當天有事無法前往，我想留下祝福</span>
           </label>
         </div>
       </div>
 
-      <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-4">
+      <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-5">
         <div>
-          <label class="block font-semibold mb-1">您的姓名</label>
-          <input type="text" placeholder="請輸入姓名" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:border-[#8b5a2b]">
+          <label class="font-iansui block font-bold mb-1">您的姓名 <span class="text-red-500">*</span></label>
+          <input type="text" id="inputName" required placeholder="請輸入姓名" class="font-iansui w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:border-[#8b5a2b]">
         </div>
-        <div>
-          <label class="block font-semibold mb-1">手機號碼</label>
-          <input type="tel" placeholder="請輸入手機號碼" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:border-[#8b5a2b]">
+
+        <!-- 選擇「無法前往」時顯示：祝福的留言 -->
+        <div id="blessingContainer" class="hidden transition-all duration-300 bg-amber-50/50 p-4 rounded-lg border border-amber-200/60 space-y-2">
+          <label class="font-iansui block font-bold mb-1 text-[#8b5a2b]">祝福的留言</label>
+          <textarea id="inputBlessing" rows="4" placeholder="請留下給新人的祝福話語..." class="font-iansui w-full border border-gray-300 p-3 rounded-lg bg-white focus:outline-none focus:border-[#8b5a2b]"></textarea>
         </div>
-        <div>
-          <label class="block font-semibold mb-1">出席人數 (含大人與小孩)</label>
-          <input type="text" placeholder="例：2大1小" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:border-[#8b5a2b]">
+
+        <!-- 選擇「參加」時顯示：人數與飲食需求 -->
+        <div id="attendanceDetailsContainer" class="space-y-5">
+          <div>
+            <label class="font-iansui block font-bold mb-1">出席人數 (含大人與小孩)</label>
+            <input type="number" id="inputAttendCount" min="1" placeholder="請輸入數字 (如：2)" class="font-iansui w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:border-[#8b5a2b]">
+          </div>
+
+          <div>
+            <label class="font-iansui block font-bold mb-2">飲食需求</label>
+            <div class="flex items-center space-x-6">
+              <label class="flex items-center space-x-2 cursor-pointer">
+                <input type="radio" name="diet" value="葷食" class="accent-[#8b5a2b] w-4 h-4" checked onclick="toggleDietCountInputs(false)">
+                <span class="font-iansui">葷食</span>
+              </label>
+              <label class="flex items-center space-x-2 cursor-pointer">
+                <input type="radio" name="diet" value="素食" class="accent-[#8b5a2b] w-4 h-4" onclick="toggleDietCountInputs(true)">
+                <span class="font-iansui">素食</span>
+              </label>
+            </div>
+          </div>
+
+          <div id="vegCountContainer" class="hidden transition-all duration-300 bg-amber-50/50 p-4 rounded-lg border border-amber-200/60 space-y-4">
+            <div>
+              <label class="font-iansui block font-bold mb-1 text-[#8b5a2b]">請問需要幾份素食餐點？</label>
+              <input type="number" id="inputVegCount" min="1" placeholder="請輸入素食份數 (如：1)" class="font-iansui w-full border border-gray-300 p-3 rounded-lg bg-white focus:outline-none focus:border-[#8b5a2b]">
+            </div>
+            <div>
+              <label class="font-iansui block font-bold mb-1 text-[#8b5a2b]">請問需要幾份葷食餐點？</label>
+              <input type="number" id="inputMeatCount" min="0" placeholder="請輸入葷食份數 (如：1)" class="font-iansui w-full border border-gray-300 p-3 rounded-lg bg-white focus:outline-none focus:border-[#8b5a2b]">
+            </div>
+          </div>
         </div>
       </div>
 
-      <button type="submit" class="w-full bg-[#8b5a2b] text-white py-3.5 rounded-xl text-lg font-semibold shadow hover:bg-[#6e4620] transition duration-200">
+      <button type="submit" id="submitBtn" class="font-iansui w-full bg-[#8b5a2b] text-white py-3.5 rounded-xl text-xl font-bold shadow hover:bg-[#6e4620] transition duration-200">
         提交表單
       </button>
     </form>
+
+    <div class="text-center my-12">
+      <h3 class="font-iansui text-3xl md:text-4xl font-bold text-[#8b5a2b] see-you-bounce tracking-widest">
+        好久不見 &nbsp; 婚禮見❗️
+      </h3>
+    </div>
+
+    <div class="max-w-md mx-auto my-8 px-2">
+      <div class="rounded-2xl overflow-hidden shadow-lg border border-amber-100">
+        <img src="final_wedding.jpg" alt="文末婚紗照" class="w-full max-h-[75vh] object-cover">
+      </div>
+    </div>
   </section>
+
+  <!-- JS 腳本：表單切換、傳送至 Google 試算表與倒數計時 -->
+  <script>
+    // ⚠️ 關鍵步驟：請將您在 Google Apps Script 取得的 Web App URL 替換掉下方網址 ⚠️
+    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyGyZYUgnHcp0y4-8nqu6i7OAr9Yx7MwpNPdFQW0Mwq8lFo-djrLAorS_0uJ7tCJQX4nA/exec';
+
+    function toggleAttendanceFields(willAttend) {
+      const blessingContainer = document.getElementById('blessingContainer');
+      const attendanceDetailsContainer = document.getElementById('attendanceDetailsContainer');
+
+      if (willAttend) {
+        blessingContainer.classList.add('hidden');
+        attendanceDetailsContainer.classList.remove('hidden');
+      } else {
+        blessingContainer.classList.remove('hidden');
+        attendanceDetailsContainer.classList.add('hidden');
+      }
+    }
+
+    function toggleDietCountInputs(show) {
+      const container = document.getElementById('vegCountContainer');
+      if (show) {
+        container.classList.remove('hidden');
+      } else {
+        container.classList.add('hidden');
+      }
+    }
+
+    // 處理表單提交事件並傳送資料給 Google 試算表
+    document.getElementById('weddingForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes('請貼上您的')) {
+        alert('尚未設定 Google 試算表連結網址！請先完成步驟 3 部署並將 URL 填入程式碼中。');
+        return;
+      }
+
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
+      submitBtn.innerText = '正在傳送資料...';
+
+      const attendVal = document.querySelector('input[name="attend"]:checked').value;
+      const isAttending = attendVal.includes('參加');
+
+      const formData = {
+        attend: attendVal,
+        name: document.getElementById('inputName').value.trim(),
+        blessing: !isAttending ? document.getElementById('inputBlessing').value.trim() : '',
+        attendCount: isAttending ? document.getElementById('inputAttendCount').value : '',
+        diet: isAttending ? document.querySelector('input[name="diet"]:checked').value : '',
+        vegCount: isAttending ? document.getElementById('inputVegCount').value : '',
+        meatCount: isAttending ? document.getElementById('inputMeatCount').value : ''
+      };
+
+      fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors', // 避開跨網域限制
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      })
+      .then(() => {
+        alert('表單已成功提交，謝謝您的回覆！');
+        document.getElementById('weddingForm').reset();
+        toggleAttendanceFields(true);
+        toggleDietCountInputs(false);
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('資料傳送時發生錯誤，請稍後再試！');
+      })
+      .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.innerText = '提交表單';
+      });
+    });
+
+    function updateWeddingCountdown() {
+      const weddingTime = new Date('2027-01-23T11:30:00').getTime();
+      const now = new Date().getTime();
+      const diff = weddingTime - now;
+
+      if (diff > 0) {
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+        document.getElementById('countdownDays').innerText = days < 10 ? '0' + days : days;
+        document.getElementById('countdownHours').innerText = hours < 10 ? '0' + hours : hours;
+        document.getElementById('countdownMinutes').innerText = minutes < 10 ? '0' + minutes : minutes;
+        document.getElementById('countdownSeconds').innerText = seconds < 10 ? '0' + seconds : seconds;
+      } else {
+        document.getElementById('countdownDays').innerText = '00';
+        document.getElementById('countdownHours').innerText = '00';
+        document.getElementById('countdownMinutes').innerText = '00';
+        document.getElementById('countdownSeconds').innerText = '00';
+      }
+    }
+
+    setInterval(updateWeddingCountdown, 1000);
+    updateWeddingCountdown();
+  </script>
 
 </body>
 </html>
