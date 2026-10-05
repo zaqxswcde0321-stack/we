@@ -576,15 +576,10 @@
             </div>
           </div>
 
-          <div id="vegCountContainer" class="hidden transition-all duration-300 bg-amber-50/50 p-4 rounded-lg border border-amber-200/60 space-y-4">
-            <div>
-              <label class="font-iansui block font-bold mb-1 text-[#8b5a2b]">請問需要幾份素食餐點？</label>
-              <input type="number" id="inputVegCount" min="1" placeholder="請輸入素食份數 (如：1)" class="font-iansui w-full border border-gray-300 p-3 rounded-lg bg-white focus:outline-none focus:border-[#8b5a2b]">
-            </div>
-            <div>
-              <label class="font-iansui block font-bold mb-1 text-[#8b5a2b]">請問需要幾份葷食餐點？</label>
-              <input type="number" id="inputMeatCount" min="0" placeholder="請輸入葷食份數 (如：1)" class="font-iansui w-full border border-gray-300 p-3 rounded-lg bg-white focus:outline-none focus:border-[#8b5a2b]">
-            </div>
+          <!-- 動態欄位：點選「素食」時僅展素食份數 -->
+          <div id="vegCountContainer" class="hidden transition-all duration-300 bg-amber-50/50 p-4 rounded-lg border border-amber-200/60">
+            <label class="font-iansui block font-bold mb-1 text-[#8b5a2b]">請問需要幾份素食餐點？</label>
+            <input type="number" id="inputVegCount" min="1" placeholder="請輸入素食份數 (如：1)" class="font-iansui w-full border border-gray-300 p-3 rounded-lg bg-white focus:outline-none focus:border-[#8b5a2b]">
           </div>
         </div>
       </div>
@@ -610,7 +605,7 @@
   <!-- JS 腳本：表單切換、傳送至 Google 試算表與倒數計時 -->
   <script>
     // ⚠️ 關鍵步驟：請將您在 Google Apps Script 取得的 Web App URL 替換掉下方網址 ⚠️
-    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyGyZYUgnHcp0y4-8nqu6i7OAr9Yx7MwpNPdFQW0Mwq8lFo-djrLAorS_0uJ7tCJQX4nA/exec';
+    const GOOGLE_SCRIPT_URL = '請貼上您的_Google_Apps_Script_Web_App_URL';
 
     function toggleAttendanceFields(willAttend) {
       const blessingContainer = document.getElementById('blessingContainer');
@@ -656,13 +651,12 @@
         blessing: !isAttending ? document.getElementById('inputBlessing').value.trim() : '',
         attendCount: isAttending ? document.getElementById('inputAttendCount').value : '',
         diet: isAttending ? document.querySelector('input[name="diet"]:checked').value : '',
-        vegCount: isAttending ? document.getElementById('inputVegCount').value : '',
-        meatCount: isAttending ? document.getElementById('inputMeatCount').value : ''
+        vegCount: isAttending ? document.getElementById('inputVegCount').value : ''
       };
 
       fetch(GOOGLE_SCRIPT_URL, {
         method: 'POST',
-        mode: 'no-cors', // 避開跨網域限制
+        mode: 'no-cors',
         headers: {
           'Content-Type': 'application/json'
         },
