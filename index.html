@@ -637,82 +637,86 @@
 
   <!-- JS 腳本：表單切換、傳送至 Google 試算表與倒數計時 -->
   <script>
-    // ⚠️ 關鍵步驟：請將您在 Google Apps Script 取得的 Web App URL 替換掉下方網址 ⚠️
-    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwDfgIVTDlRxAQWO6DdlUwRceOfMWRTGEaMOUZjYyKP351FzQzjL_Ae2WdExgqc3UGF/exec';
+ // 處理表單提交事件並傳送資料給 Google 試算表
+    document.getElementById('weddingForm').addEventListener('submit', function(e) {
+      e.preventDefault();
 
-  function toggleAttendanceFields(willAttend) {
-    const blessingContainer = document.getElementById('blessingContainer');
-    const attendanceDetailsContainer = document.getElementById('attendanceDetailsContainer');
+      if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes('請貼上您的')) {
+        alert('https://script.google.com/macros/s/AKfycbwDfgIVTDlRxAQWO6DdlUwRceOfMWRTGEaMOUZjYyKP351FzQzjL_Ae2WdExgqc3UGF/exec');
+        return;
+      }
 
-    if (willAttend) {
-      blessingContainer.classList.add('hidden');
-      attendanceDetailsContainer.classList.remove('hidden');
-    } else {
-      blessingContainer.classList.remove('hidden');
-      attendanceDetailsContainer.classList.add('hidden');
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
+      submitBtn.innerText = '正在傳送資料...';
+
+      const attendVal = document.querySelector('input[name="attend"]:checked').value;
+      const isAttending = attendVal.includes('參加');
+
+      // 抓取兒童座椅輸入的數量（若未填寫或填 0 則設為 0）
+      const childSeatInput = document.getElementById('inputChildSeatCount').value.trim();
+      const childSeatCountVal = isAttending && childSeatInput !== '' ? childSeatInput : '0';
+
+      const formData = {
+        attend: attendVal,
+        name: document.getElementById('inputName').value.trim(),
+        blessing: !isAttending ? document.getElementById('inputBlessing').value.trim() : '',
+        attendCount: isAttending ? document.getElementById('inputAttendCount').value : '',
+        childSeatCount: childSeatCountVal, // 傳送兒童座椅數量
+        diet: isAttending ? document.querySelector('input[name="diet"]:checked').value : '',
+        vegCount: isAttending ? document.getElementById('inputVegCount').value : ''
+      };
+
+      fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      })
+      .then(() => {
+        alert('表單已成功提交，謝謝您的回覆！');
+        document.getElementById('weddingForm').reset();
+        toggleAttendanceFields(true);
+        toggleDietCountInputs(false);
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('資料傳送時發生錯誤，請稍後再試！');
+      })
+      .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.innerText = '提交表單';
+      });
+    });
+
+    function updateWeddingCountdown() {
+      const weddingTime = new Date('2027-01-23T11:30:00').getTime();
+      const now = new Date().getTime();
+      const diff = weddingTime - now;
+
+      if (diff > 0) {
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+        document.getElementById('countdownDays').innerText = days < 10 ? '0' + days : days;
+        document.getElementById('countdownHours').innerText = hours < 10 ? '0' + hours : hours;
+        document.getElementById('countdownMinutes').innerText = minutes < 10 ? '0' + minutes : minutes;
+        document.getElementById('countdownSeconds').innerText = seconds < 10 ? '0' + seconds : seconds;
+      } else {
+        document.getElementById('countdownDays').innerText = '00';
+        document.getElementById('countdownHours').innerText = '00';
+        document.getElementById('countdownMinutes').innerText = '00';
+        document.getElementById('countdownSeconds').innerText = '00';
+      }
     }
-  }
 
-  function toggleDietCountInputs(show) {
-    const container = document.getElementById('vegCountContainer');
-    if (show) {
-      container.classList.remove('hidden');
-    } else {
-      container.classList.add('hidden');
-    }
-  }
+    setInterval(updateWeddingCountdown, 1000);
+    updateWeddingCountdown();
+  </script>
 
-  // 處理表單提交事件並傳送資料給 Google 試算表
-  document.getElementById('weddingForm').addEventListener('submit', function(e) {
-  e.preventDefault();
-
-  if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes('請貼上您的')) {
-    alert('https://script.google.com/macros/s/AKfycbw6MSTuJULXAc2yRea3s0UfSSZjest5W0jrBnE-CCnD4ZPbzUyAaX0EJ015ULH_caG9/exec');
-    return;
-  }
-
-  const submitBtn = document.getElementById('submitBtn');
-  submitBtn.disabled = true;
-  submitBtn.innerText = '正在傳送資料...';
-
-  const attendVal = document.querySelector('input[name="attend"]:checked').value;
-  const isAttending = attendVal.includes('參加');
-
-  const childSeatInput = document.getElementById('inputChildSeatCount').value.trim();
-  const childSeatCountVal = isAttending && childSeatInput !== '' ? childSeatInput : '0';
-
-  const formData = {
-    attend: attendVal,
-    name: document.getElementById('inputName').value.trim(),
-    blessing: !isAttending ? document.getElementById('inputBlessing').value.trim() : '',
-    attendCount: isAttending ? document.getElementById('inputAttendCount').value : '',
-    childSeatCount: childSeatCountVal,
-    diet: isAttending ? document.querySelector('input[name="diet"]:checked').value : '',
-    vegCount: isAttending ? document.getElementById('inputVegCount').value : ''
-  };
-
-  fetch(GOOGLE_SCRIPT_URL, {
-    method: 'POST',
-    mode: 'no-cors', // 跨網域發送
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(formData)
-  })
-  .then(() => {
-    // 成功發送後跳出提示並重置表單
-    alert('表單已成功提交，謝謝您的回覆！');
-    document.getElementById('weddingForm').reset();
-    toggleAttendanceFields(true);
-    toggleDietCountInputs(false);
-  })
-  .catch(error => {
-    console.error('Error:', error);
-    alert('資料傳送時發生錯誤，請稍後再試！');
-  })
-  .finally(() => {
-    // 無論成功或失敗，皆恢復按鈕狀態
-    submitBtn.disabled = false;
-    submitBtn.innerText = '提交表單';
-  });
-});
+</body>
+</html>
