@@ -581,17 +581,11 @@
               <label class="flex items-center space-x-2 cursor-pointer">
                 <input type="radio" name="diet" value="是" class="accent-[#8b5a2b] w-4 h-4" onclick="toggleDietCountInputs(true)">
                 <span class="font-iansui">是</span>
+            <input type="number" id="inputAttendCount" min="1" placeholder="請輸入數字 (如：2)" class="font-iansui w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:border-[#8b5a2b]">
+          </div>
               </label>
             </div>
           </div>
-
-          <!-- 動態欄位：點選「是」時僅展是份數 -->
-          <div id="vegCountContainer" class="hidden transition-all duration-300 bg-amber-50/50 p-4 rounded-lg border border-amber-200/60">
-            <label class="font-iansui block font-bold mb-1 text-[#8b5a2b]">請問需要幾張？</label>
-            <input type="number" id="inputVegCount" min="1" placeholder="請輸入張數 (如：1)" class="font-iansui w-full border border-gray-300 p-3 rounded-lg bg-white focus:outline-none focus:border-[#8b5a2b]">
-          </div>
-        </div>
-      </div>
 
           <div>
             <label class="font-iansui block font-bold mb-2">飲食需求</label>
