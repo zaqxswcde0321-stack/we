@@ -66,50 +66,56 @@
   </button>
 
   <script>
-    const bgm = new Audio('music.mp3');
-    bgm.loop = true;
+  const bgm = new Audio('music.mp3');
+  bgm.loop = true;
 
-    const musicIcon = document.getElementById('musicIcon');
-    const musicText = document.getElementById('musicText');
-    let isPlaying = false;
+  const musicIcon = document.getElementById('musicIcon');
+  const musicText = document.getElementById('musicText');
+  let isPlaying = false;
 
-    function playAudio() {
-      bgm.play().then(() => {
-        musicIcon.innerText = '🎶';
-        musicText.innerText = '音樂播放中';
-        isPlaying = true;
-      }).catch(err => {
-        console.log('音樂播放失敗/被瀏覽器阻擋：', err);
-      });
+  function playAudio() {
+    bgm.play().then(() => {
+      if (musicIcon) musicIcon.innerText = '🎶';
+      if (musicText) musicText.innerText = '音樂播放中';
+      isPlaying = true;
+    }).catch(err => {
+      console.log('Android 自動播放被阻擋，等待使用者點擊：', err);
+    });
+  }
+
+  function pauseAudio() {
+    bgm.pause();
+    if (musicIcon) musicIcon.innerText = '🎵';
+    if (musicText) musicText.innerText = '播放音樂';
+    isPlaying = false;
+  }
+
+  function toggleMusic(event) {
+    if (event) event.stopPropagation();
+    if (isPlaying) { 
+      pauseAudio(); 
+    } else { 
+      playAudio(); 
     }
+  }
 
-    function pauseAudio() {
-      bgm.pause();
-      musicIcon.innerText = '🎵';
-      musicText.innerText = '播放音樂';
-      isPlaying = false;
-    }
+  // 💡 Android 專用優化：只要使用者點擊或觸摸螢幕任意位置，立即觸發播放並移除監聽
+  function initAndroidAutoplay() {
+    const handleFirstInteraction = () => {
+      if (!isPlaying) {
+        playAudio();
+      }
+      // 觸發一次後即移除監聽，避免重複執行
+      document.removeEventListener('click', handleFirstInteraction, true);
+      document.removeEventListener('touchstart', handleFirstInteraction, true);
+    };
 
-    function toggleMusic(event) {
-      if (event) event.stopPropagation();
-      if (isPlaying) { pauseAudio(); } else { playAudio(); }
-    }
+    document.addEventListener('click', handleFirstInteraction, true);
+    document.addEventListener('touchstart', handleFirstInteraction, true);
+  }
 
-    function initAutoPlay() {
-      const handleUserInteraction = () => {
-        if (!isPlaying) { playAudio(); }
-        document.removeEventListener('click', handleUserInteraction);
-        document.removeEventListener('touchstart', handleUserInteraction);
-        document.removeEventListener('scroll', handleUserInteraction);
-      };
-
-      document.addEventListener('click', handleUserInteraction);
-      document.addEventListener('touchstart', handleUserInteraction);
-      document.addEventListener('scroll', handleUserInteraction);
-    }
-
-    window.addEventListener('DOMContentLoaded', initAutoPlay);
-  </script>
+  window.addEventListener('DOMContentLoaded', initAndroidAutoplay);
+</script>
 <!-- 1. 第一頁：頂部主視覺 Section -->
   <section class="text-center pt-12 pb-10 border-b border-gray-200">
     <div class="flex justify-center my-8 relative max-w-xs md:max-w-md mx-auto">
