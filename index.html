@@ -637,106 +637,118 @@
 
   <!-- JS 腳本：表單切換、傳送至 Google 試算表與倒數計 -->
   <script>
-    // ⚠️ 關鍵步驟：請將您在 Google Apps Script 取得的 Web App URL 替換掉下方網址 ⚠️
-    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbySn7hzLIjheT4EFaPZjj1scqIt8e4W0JjPOdp-LsiXU9e12JrGIqvETMCEvBS5cfGJ/exec';
+  // ⚠️ 請替換為您發布的 Web App URL ⚠️
+  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbySn7hzLIjheT4EFaPZjj1scqIt8e4W0JjPOdp-LsiXU9e12JrGIqvETMCEvBS5cfGJ/exec';
 
-    function toggleAttendanceFields(willAttend) {
-      const blessingContainer = document.getElementById('blessingContainer');
-      const attendanceDetailsContainer = document.getElementById('attendanceDetailsContainer');
+  function toggleAttendanceFields(willAttend) {
+    const blessingContainer = document.getElementById('blessingContainer');
+    const attendanceDetailsContainer = document.getElementById('attendanceDetailsContainer');
 
-      if (willAttend) {
-        blessingContainer.classList.add('hidden');
-        attendanceDetailsContainer.classList.remove('hidden');
-      } else {
-        blessingContainer.classList.remove('hidden');
-        attendanceDetailsContainer.classList.add('hidden');
-      }
+    if (willAttend) {
+      blessingContainer.classList.add('hidden');
+      attendanceDetailsContainer.classList.remove('hidden');
+    } else {
+      blessingContainer.classList.remove('hidden');
+      attendanceDetailsContainer.classList.add('hidden');
+    }
+  }
+
+  function toggleDietCountInputs(show) {
+    const container = document.getElementById('vegCountContainer');
+    if (show) {
+      container.classList.remove('hidden');
+    } else {
+      container.classList.add('hidden');
+    }
+  }
+
+  // 表單送出事件處理
+  document.getElementById('weddingForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes('請貼上您的')) {
+      alert('尚未設定 Google 試算表網址！');
+      return;
     }
 
-    function toggleDietCountInputs(show) {
-      const container = document.getElementById('vegCountContainer');
-      if (show) {
-        container.classList.remove('hidden');
-      } else {
-        container.classList.add('hidden');
-      }
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = true;
+    submitBtn.innerText = '正在傳送資料...';
+
+    const attendVal = document.querySelector('input[name="attend"]:checked').value;
+    const isAttending = attendVal.includes('參加');
+
+    // 💡 修正重點：明確抓取輸入值，若未填寫則給予 '0'
+    const childSeatElement = document.getElementById('inputChildSeatCount');
+    let childSeatCountVal = '0';
+
+    if (isAttending && childSeatElement) {
+      const rawVal = childSeatElement.value.trim();
+      childSeatCountVal = rawVal !== '' ? rawVal : '0';
     }
 
-    // 處理表單提交事件並傳送資料給 Google 試算表
-    document.getElementById('weddingForm').addEventListener('submit', function(e) {
-      e.preventDefault();
+    // 整理傳送給 Google Apps Script 的 JSON 資料
+    const formData = {
+      attend: attendVal,
+      name: document.getElementById('inputName').value.trim(),
+      blessing: !isAttending ? document.getElementById('inputBlessing').value.trim() : '',
+      attendCount: isAttending ? document.getElementById('inputAttendCount').value.trim() : '',
+      childSeatCount: childSeatCountVal, // 這裡傳遞真實填寫的數字
+      diet: isAttending ? document.querySelector('input[name="diet"]:checked').value : '',
+      vegCount: isAttending ? document.getElementById('inputVegCount').value.trim() : ''
+    };
 
-      if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes('請貼上您的')) {
-        alert('尚未設定 Google 試算表連結網址！請先完成步驟 3 部署並將 URL 填入程式碼中。');
-        return;
-      }
-
-      const submitBtn = document.getElementById('submitBtn');
-      submitBtn.disabled = true;
-      submitBtn.innerText = '正在傳送資料...';
-
-      const attendVal = document.querySelector('input[name="attend"]:checked').value;
-      const isAttending = attendVal.includes('參加');
-
-      const formData = {
-        attend: attendVal,
-        name: document.getElementById('inputName').value.trim(),
-        blessing: !isAttending ? document.getElementById('inputBlessing').value.trim() : '',
-        attendCount: isAttending ? document.getElementById('inputAttendCount').value : '',
-        diet: isAttending ? document.querySelector('input[name="diet"]:checked').value : '',
-        vegCount: isAttending ? document.getElementById('inputVegCount').value : ''
-      };
-
-      fetch(GOOGLE_SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
-      })
-      .then(() => {
-        alert('表單已成功提交，謝謝您的回覆！');
-        document.getElementById('weddingForm').reset();
-        toggleAttendanceFields(true);
-        toggleDietCountInputs(false);
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        alert('資料傳送時發生錯誤，請稍後再試！');
-      })
-      .finally(() => {
-        submitBtn.disabled = false;
-        submitBtn.innerText = '提交表單';
-      });
+    fetch(GOOGLE_SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(formData)
+    })
+    .then(() => {
+      alert('表單已成功提交，謝謝您的回覆！');
+      document.getElementById('weddingForm').reset();
+      toggleAttendanceFields(true);
+      toggleDietCountInputs(false);
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('資料傳送時發生錯誤，請稍後再試！');
+    })
+    .finally(() => {
+      submitBtn.disabled = false;
+      submitBtn.innerText = '提交表單';
     });
+  });
 
-    function updateWeddingCountdown() {
-      const weddingTime = new Date('2027-01-23T11:30:00').getTime();
-      const now = new Date().getTime();
-      const diff = weddingTime - now;
+  // 倒數計時器邏輯
+  function updateWeddingCountdown() {
+    const weddingTime = new Date('2027-01-23T11:30:00').getTime();
+    const now = new Date().getTime();
+    const diff = weddingTime - now;
 
-      if (diff > 0) {
-        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+    if (diff > 0) {
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-        document.getElementById('countdownDays').innerText = days < 10 ? '0' + days : days;
-        document.getElementById('countdownHours').innerText = hours < 10 ? '0' + hours : hours;
-        document.getElementById('countdownMinutes').innerText = minutes < 10 ? '0' + minutes : minutes;
-        document.getElementById('countdownSeconds').innerText = seconds < 10 ? '0' + seconds : seconds;
-      } else {
-        document.getElementById('countdownDays').innerText = '00';
-        document.getElementById('countdownHours').innerText = '00';
-        document.getElementById('countdownMinutes').innerText = '00';
-        document.getElementById('countdownSeconds').innerText = '00';
-      }
+      document.getElementById('countdownDays').innerText = days < 10 ? '0' + days : days;
+      document.getElementById('countdownHours').innerText = hours < 10 ? '0' + hours : hours;
+      document.getElementById('countdownMinutes').innerText = minutes < 10 ? '0' + minutes : minutes;
+      document.getElementById('countdownSeconds').innerText = seconds < 10 ? '0' + seconds : seconds;
+    } else {
+      document.getElementById('countdownDays').innerText = '00';
+      document.getElementById('countdownHours').innerText = '00';
+      document.getElementById('countdownMinutes').innerText = '00';
+      document.getElementById('countdownSeconds').innerText = '00';
     }
+  }
 
-    setInterval(updateWeddingCountdown, 1000);
-    updateWeddingCountdown();
-  </script>
+  setInterval(updateWeddingCountdown, 1000);
+  updateWeddingCountdown();
+</script>
 
 </body>
 </html>
